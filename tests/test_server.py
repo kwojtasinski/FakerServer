@@ -7,7 +7,7 @@ client = TestClient(app)
 
 def test_server_should_respond_with_password():
     response = client.post("query", json={"items": [{"name": "password"}]}).json()
-    
+
     assert "results" in response
     assert not response.get("errors")
     assert "password" in response.get("results")[0]
@@ -15,7 +15,7 @@ def test_server_should_respond_with_password():
 
 def test_server_should_respond_with_errors():
     response = client.post("query", json={"items": [{"name": "NONEXISTENT"}]}).json()
-    
+
     assert not response.get("items")
     assert response.get("errors")[0].get("name") == "NONEXISTENT"
 
