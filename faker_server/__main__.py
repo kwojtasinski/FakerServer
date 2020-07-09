@@ -1,7 +1,4 @@
 """ main module to run server """
-import logging
-import os
-
 import click
 import dotenv
 import uvicorn

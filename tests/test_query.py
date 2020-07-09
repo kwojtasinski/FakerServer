@@ -7,7 +7,6 @@ def test_query_executor_should_generate_random_password():
     query_result = executor()
 
     for result in query_result.results:
-        assert "password" in result
         assert isinstance(result["password"], str)
 
 
@@ -26,8 +25,6 @@ def test_query_executor_should_generate_pair_of_items():
     query_result = executor()
 
     for result in query_result.results:
-        assert "name" in result
-        assert "email" in result
         assert isinstance(result.get("name"), str)
         assert isinstance(result.get("email"), str)
 
@@ -42,4 +39,17 @@ def test_query_executor_should_support_item_params():
     for result in query_result.results:
         assert result.get("pyint") <= 100
 
+    assert not query_result.errors
+
+
+def test_query_executor_should_support_locale():
+    query = Query(items=[QueryItem(name="name")], settings={"locale": "pl_PL"})
+    executor = QueryExecutor(query, 10)
+    query_result = executor()
+
+    for result in query_result.results:
+        assert result.get("name")
+        assert isinstance(result.get("name"), str)
+
+    assert executor.faker._locales[0] == "pl_PL"
     assert not query_result.errors

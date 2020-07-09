@@ -8,16 +8,17 @@ client = TestClient(app)
 def test_server_should_respond_with_password():
     response = client.post("query", json={"items": [{"name": "password"}]}).json()
 
-    assert "results" in response
+    for result in response.get("results"):
+        assert isinstance(result.get("password"), str)
+
     assert not response.get("errors")
-    assert "password" in response.get("results")[0]
 
 
 def test_server_should_respond_with_errors():
     response = client.post("query", json={"items": [{"name": "NONEXISTENT"}]}).json()
 
-    assert not response.get("items")
     assert response.get("errors")[0].get("name") == "NONEXISTENT"
+    assert not response.get("items")
 
 
 def test_server_should_generate_pair_of_items():
@@ -26,18 +27,29 @@ def test_server_should_generate_pair_of_items():
     ).json()
 
     for result in response.get("results"):
-        assert "name" in result
-        assert "email" in result
         assert isinstance(result.get("name"), str)
         assert isinstance(result.get("email"), str)
 
+    assert not response.get("errors")
 
-def test_query_executor_should_support_item_params():
+
+def test_server_should_support_item_params():
     response = client.post(
         "query", json={"items": [{"name": "pyint", "params": {"max_value": 100}}]}
     ).json()
 
     for result in response.get("results"):
         assert result.get("pyint") <= 100
+
+    assert not response.get("errors")
+
+
+def test_server_should_support_locale():
+    response = client.post(
+        "query", json={"items": [{"name": "name"}], "settings": {"locale": "pl_PL"}}
+    ).json()
+
+    for result in response.get("results"):
+        assert isinstance(result.get("name"), str)
 
     assert not response.get("errors")

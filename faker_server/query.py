@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 
 from faker import Faker
 from pydantic import BaseModel
@@ -15,18 +15,30 @@ class QueryResult(BaseModel):
     errors: Optional[List]
 
 
+class QuerySettings(BaseModel):
+    locale: Optional[Union[str, List]]
+    seed: Optional[int]
+
+
 class Query(BaseModel):
     items: List[QueryItem]
+    settings: Optional[QuerySettings]
 
 
 class QueryExecutor:
     def __init__(self, query: Query, limit: int):
         self.query = query
         self.limit = limit
-        self.faker = Faker()
+
+        if self.query.settings:
+            settings_dict = self.query.settings.dict()
+            self.faker = Faker(settings_dict.get("locale"))
+            Faker.seed(settings_dict.get("seed"))
+        else:
+            self.faker = Faker()
 
     @staticmethod
-    def get_item_names(items: List[QueryItem]):
+    def get_item_names(items: List[QueryItem]) -> str:
         return ",".join([item.name for item in items])
 
     def process(self) -> QueryResult:
