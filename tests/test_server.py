@@ -1,12 +1,14 @@
 from fastapi.testclient import TestClient
 
-from faker_server.server import app
+from faker_server.server import app, API_PATH
 
 client = TestClient(app)
 
 
 def test_server_should_respond_with_password():
-    response = client.post("query", json={"items": [{"name": "password"}]}).json()
+    response = client.post(
+        API_PATH.format("query"), json={"items": [{"name": "password"}]}
+    ).json()
 
     for result in response.get("results"):
         assert isinstance(result.get("password"), str)
@@ -15,7 +17,9 @@ def test_server_should_respond_with_password():
 
 
 def test_server_should_respond_with_errors():
-    response = client.post("query", json={"items": [{"name": "NONEXISTENT"}]}).json()
+    response = client.post(
+        API_PATH.format("query"), json={"items": [{"name": "NONEXISTENT"}]}
+    ).json()
 
     assert response.get("errors")[0].get("name") == "NONEXISTENT"
     assert not response.get("items")
@@ -23,7 +27,7 @@ def test_server_should_respond_with_errors():
 
 def test_server_should_generate_pair_of_items():
     response = client.post(
-        "query", json={"items": [{"name": "name"}, {"name": "email"}]}
+        API_PATH.format("query"), json={"items": [{"name": "name"}, {"name": "email"}]}
     ).json()
 
     for result in response.get("results"):
@@ -35,7 +39,8 @@ def test_server_should_generate_pair_of_items():
 
 def test_server_should_support_item_params():
     response = client.post(
-        "query", json={"items": [{"name": "pyint", "params": {"max_value": 100}}]}
+        API_PATH.format("query"),
+        json={"items": [{"name": "pyint", "params": {"max_value": 100}}]},
     ).json()
 
     for result in response.get("results"):
@@ -46,7 +51,8 @@ def test_server_should_support_item_params():
 
 def test_server_should_support_locale():
     response = client.post(
-        "query", json={"items": [{"name": "name"}], "settings": {"locale": "pl_PL"}}
+        API_PATH.format("query"),
+        json={"items": [{"name": "name"}], "settings": {"locale": "pl_PL"}},
     ).json()
 
     for result in response.get("results"):
