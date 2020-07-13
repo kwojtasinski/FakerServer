@@ -16,7 +16,7 @@ def test_query_executor_should_return_errors():
     query_result = executor()
 
     assert not query_result.results
-    assert query_result.errors[0].get("name") == "NONEXISTENT"
+    assert query_result.errors[0].item.name == "NONEXISTENT"
 
 
 def test_query_executor_should_generate_pair_of_items():
@@ -48,8 +48,20 @@ def test_query_executor_should_support_locale():
     query_result = executor()
 
     for result in query_result.results:
-        assert result.get("name")
         assert isinstance(result.get("name"), str)
 
     assert executor.faker._locales[0] == "pl_PL"
     assert not query_result.errors
+
+
+def test_query_executor_should_omit_incorrect_params():
+    query = Query(items=[QueryItem(name="name", params={"INCORRECT": True})])
+    executor = QueryExecutor(query, 10)
+    query_result = executor()
+
+    for result in query_result.results:
+        assert isinstance(result.get("name"), str)
+
+    assert query_result.errors[0].item.name == "name"
+    assert query_result.errors[0].item.params == {"INCORRECT": True}
+    assert "params" in query_result.errors[0].reason
