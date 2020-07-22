@@ -1,25 +1,21 @@
-import logging
-
 from fastapi import FastAPI
-from starlette.responses import RedirectResponse
 
-from query import Query, QueryExecutor, QueryResult
+from query import Query, QueryExecutor, QueryResult, QueryItem
 
 API_PATH = "/api/v1/{}"
 
-app = FastAPI()
+app = FastAPI(docs_url="/")
 
-@app.get("/")
-def home():
-    """ Redirects to docs """
-    return RedirectResponse("/docs")
+
+@app.get(API_PATH.format("{name}"))
+def get_single_item(name: str, limit: int = 1, flatten: bool = False) -> QueryResult:
+    query = Query(items=[QueryItem(name=name)])
+    executor = QueryExecutor(query, limit)
+
+    return executor.process(flatten)
 
 
 @app.post(API_PATH.format("query"))
 def query_fake_data(query: Query, limit: int = 1) -> QueryResult:
-    logging.info(
-        f"Get query (items={QueryExecutor.get_item_names(query.items)}) with limit {limit}"
-    )
     executor = QueryExecutor(query, limit)
-
     return executor()

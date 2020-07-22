@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, List, Union
+from typing import Dict, Optional, List, Union, Any
 
 from faker import Faker
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class QueryItemError(BaseModel):
 
 
 class QueryResult(BaseModel):
-    results: List[Dict]
+    results: Union[List[Dict], List[Any]]
     errors: Optional[List[QueryItemError]]
 
 
@@ -90,7 +90,10 @@ class QueryExecutor:
 
         return errors
 
-    def process(self) -> QueryResult:
+    def process(self, flatten=False) -> QueryResult:
+        logging.info(
+            f"Get query (items={self.get_item_names(self.query.items)}) with limit {self.limit}"
+        )
         correct_items = [
             item for item in self.query.items if hasattr(self.faker, item.name)
         ]
@@ -110,6 +113,10 @@ class QueryExecutor:
                         result[item.name] = getattr(self.faker, item.name)()
 
                 results.append(result)
+
+        if flatten:
+            logging.info("Flatten results")
+            results = [result.get(self.query.items[0].name) for result in results]
 
         return QueryResult(results=results, errors=errors)
 
